@@ -4,8 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>いまの地球を、見る。— ひまわり9号タイムラプス</title>
-<meta name="description" content="気象衛星ひまわり9号がとらえた“いまの地球”。直近24時間の雲の動きをループ再生。台風の渦も、ドラッグとピンチで追えます。">
+<meta name="description" content="気象衛星ひまわり9号がとらえた“いまの地球”。直近24時間の雲の動きをループ再生。台風の渦も、ドラッグとピンチで追えます。制作：Earth Sensing Technologies／データ提供：情報通信研究機構（NICT）。">
+<meta name="author" content="Earth Sensing Technologies">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cg transform='translate(256,256)' fill='none' stroke='%23143d5c' stroke-linecap='round'%3E%3Ccircle r='26' fill='%23143d5c' stroke='none'/%3E%3Ccircle r='56' stroke-width='16' stroke-dasharray='310 42' transform='rotate(-30)'/%3E%3Ccircle r='90' stroke-width='14' opacity='.65' stroke-dasharray='498 67' transform='rotate(150)'/%3E%3Ccircle r='124' stroke-width='12' opacity='.35' stroke-dasharray='686 93' transform='rotate(-30)'/%3E%3C/g%3E%3C/svg%3E">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="Earth Sensing Technologies">
 <meta property="og:url" content="https://himawari-live.vercel.app/">
 <meta property="og:title" content="いまの地球を、見る。— ひまわり9号タイムラプス">
 <meta property="og:description" content="気象衛星ひまわり9号がとらえた“いまの地球”。直近24時間の雲の動きをループ再生。台風の渦も、ドラッグとピンチで追えます。">
@@ -18,49 +21,90 @@
 <meta name="twitter:description" content="ひまわり9号がとらえた“いまの地球”。直近24時間の雲の動きをループ再生。台風の渦をドラッグ＆ピンチで。">
 <meta name="twitter:image" content="https://himawari-live.vercel.app/og.jpg">
 <style>
+  :root{
+    --est-deep:#143d5c; --est-mid:#1e6a95; --est-light:#5fa8d6;
+    --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
+    --mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  }
   *{margin:0;padding:0;box-sizing:border-box}
   body{
     background:#05070d;color:#cdd6e6;
-    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    font-family:var(--serif);
     min-height:100vh;display:flex;flex-direction:column;align-items:center;
     padding:max(18px,env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));
     overflow:hidden;
   }
-  h1{font-size:13px;letter-spacing:.34em;font-weight:600;color:#7fb3ff;margin-bottom:6px}
-  .ts{font-size:12px;color:#8a98b4;letter-spacing:.06em;margin-bottom:18px;min-height:16px}
+  h1{font-family:var(--mono);font-size:13px;letter-spacing:.34em;font-weight:600;color:var(--est-light);margin-bottom:6px}
+  .ts{font-family:var(--mono);font-size:12px;color:#8a98b4;letter-spacing:.06em;margin-bottom:18px;min-height:16px}
   .view{
     position:relative;width:min(92vw,68vh,720px);aspect-ratio:1;
     border-radius:18px;overflow:hidden;background:#000;cursor:grab;
-    box-shadow:0 0 90px rgba(60,120,220,.18), inset 0 0 1px #1a2a44;
+    box-shadow:0 0 90px rgba(30,106,149,.22), inset 0 0 1px #1a2a44;
     touch-action:none;
   }
   .view:active{cursor:grabbing}
   .stage{position:absolute;inset:0;transform-origin:0 0;will-change:transform;display:grid;background:#000}
   .stage img{width:100%;height:100%;display:block;color:transparent;font-size:0}
+  .fallback{
+    position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    background:#05070d;text-align:center;padding:28px;font-family:var(--serif);
+    font-size:12.5px;line-height:1.9;color:#8a98b4;
+  }
+  .fallback.show{display:flex}
+  .fallback .en{display:block;margin-top:10px;font-family:var(--mono);font-size:10.5px;color:#5a6684;letter-spacing:.02em}
   .controls{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap;justify-content:center;align-items:center}
   .controls button{
-    background:transparent;border:1px solid #283a5c;color:#9fb0cc;
-    font:inherit;font-size:12px;letter-spacing:.06em;padding:7px 15px;
+    background:transparent;border:1px solid var(--est-deep);color:#9fb0cc;
+    font-family:var(--mono);font-size:12px;letter-spacing:.06em;padding:7px 15px;
     border-radius:999px;cursor:pointer;transition:all .15s ease;min-width:40px;
   }
-  .controls button:hover{border-color:#3a5da0;color:#dce7ff}
-  .speed{display:flex;align-items:center;gap:7px;color:#6a7894;font-size:11px;margin-left:4px}
-  .speed input{accent-color:#3a5da0}
-  .note{font-size:11px;color:#566480;margin-top:16px;max-width:560px;text-align:center;line-height:1.9}
+  .controls button:hover{border-color:var(--est-mid);color:#dce7ff}
+  .speed{font-family:var(--mono);display:flex;align-items:center;gap:7px;color:#6a7894;font-size:11px;margin-left:4px}
+  .speed input{accent-color:var(--est-mid)}
+  .note{font-family:var(--serif);font-size:11px;color:#7885a3;margin-top:14px;max-width:560px;text-align:center;line-height:1.7}
+  .note .en{display:block;margin-top:6px;color:#566480}
+  .credit{
+    position:absolute;left:14px;bottom:12px;z-index:2;
+    display:flex;align-items:center;gap:6px;text-decoration:none;
+    color:#dce7ff;opacity:.55;transition:opacity .15s ease;
+    filter:drop-shadow(0 1px 3px rgba(0,0,0,.85));
+  }
+  .credit:hover{opacity:.9}
+  .credit svg{display:block;flex:none}
+  .credit span{font-family:var(--mono);font-size:9px;letter-spacing:.35em}
   @media (max-width:600px){
     h1{letter-spacing:.16em;font-size:11px;text-align:center}
     .ts{margin-bottom:14px}
     .controls{gap:7px;margin-top:18px}
     .controls button{padding:9px 13px;min-height:40px}
     .speed{width:100%;justify-content:center;margin:6px 0 0}
-    .note{font-size:10.5px;margin-top:13px}
+    .note{font-size:10.5px;margin-top:11px}
+    .credit{left:10px;bottom:9px}
+    .credit span{font-size:8px}
   }
 </style>
 </head>
 <body>
   <h1>HIMAWARI-9 ／ 直近24時間のタイムラプス</h1>
   <div class="ts" id="ts">読み込み中…</div>
-  <div class="view" id="view"><div class="stage" id="stage"></div></div>
+  <div class="view" id="view">
+    <div class="stage" id="stage"></div>
+    <div class="fallback" id="fallback">
+      衛星画像を取得できませんでした。しばらくしてから再度お試しください。
+      <span class="en">Unable to reach the satellite feed right now. Please try again shortly.</span>
+    </div>
+    <a class="credit" href="https://earthsensing.co.jp/" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 512 512" aria-label="Earth Sensing Technologies">
+        <g transform="translate(256,256)" fill="none" stroke="currentColor" stroke-linecap="round">
+          <circle r="26" fill="currentColor" stroke="none"/>
+          <circle r="56" stroke-width="7.5" stroke-dasharray="310 42" transform="rotate(-30)"/>
+          <circle r="90" stroke-width="6.5" opacity=".65" stroke-dasharray="498 67" transform="rotate(150)"/>
+          <circle r="124" stroke-width="5.5" opacity=".35" stroke-dasharray="686 93" transform="rotate(-30)"/>
+        </g>
+      </svg>
+      <span>EARTH SENSING TECHNOLOGIES</span>
+    </a>
+  </div>
   <div class="controls">
     <button id="bPrev">⏮</button>
     <button id="bPlay">⏸</button>
@@ -72,14 +116,16 @@
     <span class="speed">速さ<input id="spd" type="range" min="4" max="16" value="12"></span>
   </div>
   <div class="note">
-    ひまわり9号のトゥルーカラー画像（提供：NICT）を、10分ごとに並べて連続再生しています。<br>
-    地球は静止衛星から見て止まって見え、動くのは雲＝台風の渦です。ドラッグで移動／ホイール・ピンチで拡大。
+    ひまわり9号のトゥルーカラー画像（提供：情報通信研究機構／NICT）を、10分ごとに並べて連続再生しています。地球は静止衛星から見て止まって見え、動くのは雲＝台風の渦です。ドラッグで移動／ホイール・ピンチで拡大。
+    <span class="en">True-color imagery from the Himawari-9 weather satellite (data: NICT, Japan), replayed at 10-minute intervals. The Earth appears still from geostationary orbit — what moves is the cloud, the breathing spiral of a typhoon. Drag to pan, pinch or scroll to zoom.</span>
   </div>
 
 <script>
 const BASE='https://himawari8.nict.go.jp/img/D531106';
 const LEVEL=2;             // 全球1100px。コマ数を増やすぶん解像度は控えめ＝滑らかさ優先
 const FRAMES=144, STEP=10; // 144フレーム × 10分 = 直近24時間（公式と同じ10分間隔でなめらか）
+const LATEST_TIMEOUT=10000; // 外部fetchのタイムアウト（10-12s規定の下限）
+const LOAD_GUARD=12000;     // 保険タイマー（同規定の上限）
 const JP={x:0.50, y:0.235};
 const HOME={x:0.52, y:0.32, z:1.5};   // 初期表示（地球の縁が見える引き＝台風が中央）
 let latest=null, V=0, zoom=1, panX=0, panY=0;
@@ -91,6 +137,7 @@ const pad=n=>String(n).padStart(2,'0');
 const view=document.getElementById('view');
 const stage=document.getElementById('stage');
 const tsEl=document.getElementById('ts');
+const fallbackEl=document.getElementById('fallback');
 
 function apply(){ stage.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`; }
 function focus(cx,cy,z){ zoom=z; panX=V/2-cx*V*zoom; panY=V/2-cy*V*zoom; apply(); }
@@ -107,11 +154,14 @@ function fallbackDate(){
        + `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:00`;
 }
 async function fetchLatest(){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),LATEST_TIMEOUT);
   try{
-    const r=await fetch(BASE+'/latest.json?_='+Date.now());
+    const r=await fetch(BASE+'/latest.json?_='+Date.now(),{signal:ctrl.signal});
     if(!r.ok) throw 0;
     return (await r.json()).date;
   }catch(e){ return fallbackDate(); }
+  finally{ clearTimeout(timer); }
 }
 function urlFor(date,x,y){
   const Y=date.getUTCFullYear(),M=pad(date.getUTCMonth()+1),D=pad(date.getUTCDate());
@@ -130,6 +180,7 @@ function buildFrames(){
   ensureTiles();
   frames=[];
   loaded=0; total=FRAMES*LEVEL*LEVEL; started=false;
+  fallbackEl.classList.remove('show');
   for(let i=FRAMES-1;i>=0;i--){            // 古い→新しい
     const date=new Date(base - i*STEP*60000);
     const hm=date.getUTCHours()*100+date.getUTCMinutes();   // ひまわりのルーチン休止（02:40/14:40 UTC＝11:40/23:40 JST）はダミー画像なのでスキップ
@@ -145,7 +196,7 @@ function buildFrames(){
     frames.push(fobj);
   }
   idx=frames.length-1;
-  clearTimeout(loadGuard); loadGuard=setTimeout(()=>startPlayback(true),9000);   // 保険
+  clearTimeout(loadGuard); loadGuard=setTimeout(handleLoadTimeout,LOAD_GUARD);   // 保険
 }
 function onTileLoad(f){
   loaded++;
@@ -156,9 +207,19 @@ function onTileLoad(f){
     if(frames.filter(x=>x.ready).length>=3) startPlayback();
   }
 }
-function startPlayback(force){
+function handleLoadTimeout(){                // 保険タイマー発火時：読み込めていれば再生開始、全滅ならフォールバック表示
   if(started) return;
-  if(!force && !frames.some(f=>f.ready)) return;
+  if(frames.some(f=>f.ready)) startPlayback();
+  else showFallback();
+}
+function showFallback(){
+  started=true;
+  tsEl.textContent='';
+  fallbackEl.classList.add('show');
+}
+function startPlayback(){
+  if(started) return;
+  if(!frames.some(f=>f.ready)) return;
   started=true; tsEl.textContent='';
   idx=stepReady(frames.length,-1);         // 最新側の有効コマ
   showFrame(frames[idx]);
